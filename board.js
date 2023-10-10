@@ -90,24 +90,12 @@ class Board {
         // put the stone on the board
         this.set(start, color);
 
-        // remove dead groups (from the "legal" method)
+        // remove dead group
         for (let coord of results.values) {
             this.set(coord, 0);
             dead.push(coord);
         }
 
-        // recompute groups
-        let gps = this.groups();
-
-        // compute dead groups (0 libs)
-        for (let gp of gps) {
-            if (gp.libs.size == 0) {
-                for (let coord of gp.coords) {
-                    this.set(coord, 0);
-                    dead.push(coord);
-                }
-            }
-        }
         this.tree.push(start, dead, color);
         return new Result(true, dead);
     }
@@ -120,9 +108,11 @@ class Board {
         this.set(start, color);
         // if it has >0 libs, it's legal
         let gp = this.find_group(start);
+        let enough_libs = false;
         if (gp.libs.size > 0) {
-            return new Result(true, []);
+            enough_libs = true;
         }
+
         // remove any groups of opposite color with 0 libs
         // important: only check neighboring area
         let dead_set = new ObjectSet();
@@ -141,14 +131,16 @@ class Board {
                 }
             }
         }
-        if (!killed_something) {
+        let ok = true;
+        if (!(enough_libs || killed_something)) {
             this.set(start, 0);
+            ok = false;
         }
         let dead = [];
         for (let d of dead_set) {
             dead.push(JSON.parse(d));
         }
-        return new Result(killed_something, dead);
+        return new Result(ok, dead);
     }
 
     neighbors(start) {

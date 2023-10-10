@@ -54,8 +54,10 @@ class BoardGraphics {
         this.new_canvas("lines", 10);
         this.new_canvas("coords", 20);
         this.new_canvas("ghost", 50);
+        // stones are on 900
         this.new_canvas("marks", 1000);
         this.new_canvas("ghost-marks", 1000);
+        this.new_canvas("current", 950);
         this.buttons();
     }
 
@@ -181,16 +183,32 @@ class BoardGraphics {
         }
     }
 
-    draw_circle(x, y, r, hexColor, id) {
+    draw_circle(x, y, r, hexColor, id, filled=true) {
         let ctx = this.canvases.get(id).getContext("2d");
         let real_x = x*this.side + this.pad;
         let real_y = y*this.side + this.pad;
         ctx.beginPath();
-        ctx.strokeStyle = "#00000000";
+        if (filled) {
+            ctx.strokeStyle = "#00000000";
+        } else {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = hexColor;
+        }
         ctx.arc(real_x, real_y, r, 0, 2*Math.PI);
-        ctx.fillStyle = hexColor;
-        ctx.fill();
+        if (filled) {
+            ctx.fillStyle = hexColor;
+            ctx.fill();
+        }
         ctx.stroke();
+    }
+
+    draw_current(x, y, color) {
+        let hexcolor = "#FFFFFF";
+        if (color == 2) {
+            hexcolor = "#000000";
+        }
+        this.draw_circle(x, y, this.side/4, hexcolor, "current", false);
+
     }
 
     draw_triangle(x, y, hexColor, id) {
@@ -254,7 +272,7 @@ class BoardGraphics {
         }
         // this could be more idiomatic and universal
         let id = x.toString() + "-" + y.toString();
-        this.new_canvas(id, 999);
+        this.new_canvas(id, 900);
         this.draw_circle(x, y, radius, hexcolor, id);
         // check if there's a letter or triangle here too
         let t_id = "triangle-" + id;
@@ -475,7 +493,9 @@ class BoardGraphics {
             let id = v.x.toString() + "-" + v.y.toString();
             this.clear_canvas(id);
         }
+        this.clear_canvas("current");
         this.draw_stone(x, y, color);
+        this.draw_current(x, y, color);
         if (this.toggling) {
             this.toggle_color();
         }
@@ -490,12 +510,25 @@ class BoardGraphics {
         let captured = result[1];
         let color = result[2];
         let c_id = coord.x.toString() + "-" + coord.y.toString();
+
+        // clear previous move
         this.clear_canvas(c_id);
         this.board.set(coord, 0);
+        this.clear_canvas("current");
+
+        // switch color
         let new_color = 2;
         if (color == 2) {
             new_color = 1;
         }
+
+        // find current move
+        let cur = this.board.tree.current.value;
+        if (cur != null) {
+            this.draw_current(cur.x, cur.y, new_color);
+        }
+
+        // redraw captured stones
         for (let c of captured) {
             this.draw_stone(c.x, c.y, new_color);
             this.board.set(c, new_color);
@@ -513,6 +546,8 @@ class BoardGraphics {
         let c_id = coord.x.toString() + "-" + coord.y.toString();
         this.draw_stone(coord.x, coord.y, color);
         this.board.set(coord, color);
+        this.clear_canvas("current");
+        this.draw_current(coord.x, coord.y, color);
         let new_color = 2;
         if (color == 2) {
             new_color = 1;
@@ -542,7 +577,7 @@ class BoardGraphics {
             // do stuff;
             return;
         }
-        layer2(payload);
+        this.layer2(payload);
     }
 
     layer2(payload) {
@@ -560,7 +595,7 @@ class BoardGraphics {
     }
 
     onmessage(event) {
-        console.log(event.data);
+        console.log("receiving:", event.data);
         let payload = JSON.parse(event.data);
         this.layer2(payload);
     }
@@ -590,7 +625,7 @@ class BoardGraphics {
 
 window.onload = function(e) {
     add_style();
-    let bg = new BoardGraphics(true, "ws://localhost:8000/");
+    let bg = new BoardGraphics(false, "ws://localhost:8000/");
     document.addEventListener("click", function (event) {bg.click(event)});
     document.addEventListener("mousemove", function (event) {bg.mousemove(event)});
     document.addEventListener("keydown", function (event) {bg.keydown(event)});

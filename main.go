@@ -22,12 +22,13 @@ func (s *Server) Handler(ws *websocket.Conn) {
     }
     s.conns[url][id] = ws
     for {
-        data := make([]byte, 16)
+        data := make([]byte, 64)
         n, err := ws.Read(data)
         if err != nil {
             fmt.Println(id, err)
             break
         }
+        fmt.Println(string(data));
         for _,conn := range s.conns[url] {
             conn.Write(data[:n])
         }

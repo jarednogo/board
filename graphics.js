@@ -1,4 +1,4 @@
-import { Board, hello } from './board.js';
+import { Board } from './board.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -25,7 +25,17 @@ function new_fa(cls, handler) {
 }
 
 class BoardGraphics {
-    constructor() {
+    constructor(online, url) {
+        this.online = online;
+        if (online) {
+            this.socket = new WebSocket(url);
+            this.socket.onmessage = function (orig) {
+                function inner(event) {
+                    return orig.onmessage(event);
+                }
+                return inner;
+            }(this);
+        }
         let review = document.getElementById("review");
         let size = review.getAttribute("size");
         this.bgcolor = "#f2cb63";
@@ -71,9 +81,22 @@ class BoardGraphics {
         column.appendChild(new_fa("fa-solid fa-a", function(orig) {function inner() {orig.set_letter()}; return inner;}(this)));
         column.appendChild(new_fa("fa-solid fa-angles-right", function(orig) {function inner() {orig.set_pass()}; return inner;}(this)));
 
+        // upload button
+        let inp = document.createElement("input");
+        inp.id = "myfile";
+        inp.setAttribute("style", "display:none;");
+        inp.setAttribute("type", "file");
+        inp.onclick = function(orig) {function inner() {orig.upload()}; return inner;}(this);
+        let button = new_fa("fa-solid fa-upload", function() {document.getElementById("myfile").click()});
+        column.appendChild(inp);
+        column.appendChild(button);
+
+        // download button
+        column.appendChild(new_fa("fa-solid fa-download", function(orig) {function inner() {orig.download()}; return inner;}(this)));
+
         row.appendChild(new_fa("fa-solid fa-backward-fast"));
-        row.appendChild(new_fa("fa-solid fa-caret-left"));
-        row.appendChild(new_fa("fa-solid fa-caret-right"));
+        row.appendChild(new_fa("fa-solid fa-caret-left", function(orig) {function inner() {orig.left()}; return inner;}(this)));
+        row.appendChild(new_fa("fa-solid fa-caret-right", function(orig) {function inner() {orig.right()}; return inner;}(this)));
         row.appendChild(new_fa("fa-solid fa-forward-fast"));
 
         let style = "position: absolute; ";
@@ -83,9 +106,6 @@ class BoardGraphics {
         //style += ((this.width + this.pad*2)/2).toString() + "px; top: ";
         style = "position: absolute; bottom: -20px; left: 0; right: 0; margin: auto;";
         style += "display: flex;";
-        //style += "width: 90px;";
-        //style += "height: 20px;";
-        //style += "top: " + (this.width+this.pad*2).toString() + "px;";
         row.setAttribute("style", style);
 
         review.appendChild(column);
@@ -283,7 +303,12 @@ class BoardGraphics {
         ctx.font = "bold " + font_size.toString() + "px Arial";
         ctx.fillStyle = color;
         ctx.lineWidth = 2;
-        ctx.fillText(letter, real_x-font_size/3, real_y+font_size/3);
+        let x_offset = font_size/3;
+        if (letter == "I") {
+            x_offset = font_size/8;
+        }
+        let y_offset = font_size/3;
+        ctx.fillText(letter, real_x-x_offset, real_y+y_offset);
     }
 
     draw_ghost_letter(x, y, color) {
@@ -311,12 +336,20 @@ class BoardGraphics {
             if (this.canvases.has(id)) {
                 this.canvases.get(id).remove();
                 this.canvases.delete(id);
-            } else {
-                this.new_canvas(id, 1000);
-                this.draw_triangle(x, y, hexcolor, id);
+                return;
             }
+            this.new_canvas(id, 1000);
+            this.draw_triangle(x, y, hexcolor, id);
         } else if (this.mark == "letter") {
             let id = "letter-" + x.toString() + "-" + y.toString();
+            if (this.canvases.has(id)) {
+                this.canvases.get(id).remove();
+                this.canvases.delete(id);
+                let bg_id = "bg-" + x.toString() + "-" + y.toString();
+                this.canvases.get(bg_id).remove();
+                this.canvases.delete(bg_id);
+                return;
+            }
             this.new_canvas(id, 1000);
             let c = this.canvases.get(id);
             let letter = letters[this.letter%26];
@@ -402,21 +435,27 @@ class BoardGraphics {
         this.mark = "letter";
     }
 
-    mousemove(event) {
-        //console.log(event.clientX, event.clientY);
-        let coords = this.pos_to_coord(event.pageX, event.pageY);
-        if (this.mark != "") {
-            this.draw_ghost_mark(coords[0], coords[1]);
-        } else {
-            this.draw_ghost_stone(coords[0], coords[1], this.color);
+    upload() {
+        let inp = document.getElementById("myfile");
+        inp.onchange = () => {
+            const selectedFile = inp.files[0];
+            const reader = new FileReader();
+            reader.readAsText(selectedFile);
+
+            reader.addEventListener(
+                "load",
+                () => {
+                    console.log(reader.result);
+                },
+                false,
+            );
         }
     }
 
-    click(event) {
-        //console.log(event.clientX, event.clientY);
-        let coords = this.pos_to_coord(event.pageX, event.pageY);
-        let x = coords[0];
-        let y = coords[1];
+    download() {
+    }
+
+    place(x, y, color) {
         // if out of bounds, just return
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
@@ -436,19 +475,125 @@ class BoardGraphics {
             let id = v.x.toString() + "-" + v.y.toString();
             this.clear_canvas(id);
         }
-        this.draw_stone(x, y, this.color);
+        this.draw_stone(x, y, color);
         if (this.toggling) {
             this.toggle_color();
         }
     }
+
+    left() {
+        let result = this.board.tree.left();
+        let coord = result[0];
+        if (coord == null) {
+            return;
+        }
+        let captured = result[1];
+        let color = result[2];
+        let c_id = coord.x.toString() + "-" + coord.y.toString();
+        this.clear_canvas(c_id);
+        this.board.set(coord, 0);
+        let new_color = 2;
+        if (color == 2) {
+            new_color = 1;
+        }
+        for (let c of captured) {
+            this.draw_stone(c.x, c.y, new_color);
+            this.board.set(c, new_color);
+        }
+    }
+    
+    right() {
+        let result = this.board.tree.right();
+        let coord = result[0];
+        if (coord == null) {
+            return;
+        }
+        let captured = result[1];
+        let color = result[2];
+        let c_id = coord.x.toString() + "-" + coord.y.toString();
+        this.draw_stone(coord.x, coord.y, color);
+        this.board.set(coord, color);
+        let new_color = 2;
+        if (color == 2) {
+            new_color = 1;
+        }
+        for (let c of captured) {
+            c_id = c.x.toString() + "-" + c.y.toString();
+            this.clear_canvas(c_id);
+            this.board.set(c, 0);
+        }
+    }
+
+    layer(payload) {
+        let evt = payload["event"];
+        if (evt == "mousemove") {
+            let coords = payload["value"];
+            if (this.mark != "") {
+                this.draw_ghost_mark(coords[0], coords[1]);
+            } else {
+                this.draw_ghost_stone(coords[0], coords[1], this.color);
+            }
+            return;
+        }
+
+        if (this.online) {
+            console.log("sending:", payload);
+            this.socket.send(JSON.stringify(payload));
+            // do stuff;
+            return;
+        }
+        layer2(payload);
+    }
+
+    layer2(payload) {
+        let evt = payload["event"];
+        if (evt == "keydown") {
+            if (payload["value"] == "ArrowLeft") {
+                this.left();
+            } else if (payload["value"] == "ArrowRight") {
+                this.right();
+            }
+        } else if (evt == "click") {
+            let coords = payload["value"];
+            this.place(coords[0], coords[1], this.color);
+        }
+    }
+
+    onmessage(event) {
+        console.log(event.data);
+        let payload = JSON.parse(event.data);
+        this.layer2(payload);
+    }
+
+    keydown(event) {
+        let payload = {"event": "keydown", "value": event.key};
+        let keys = new Set();
+        keys.add("ArrowLeft");
+        keys.add("ArrowRight");
+        if (keys.has(event.key)) {
+            this.layer(payload);
+        }
+    }
+
+    mousemove(event) {
+        let coords = this.pos_to_coord(event.clientX, event.clientY);
+        let payload = {"event": "mousemove", "value": coords};
+        this.layer(payload);
+    }
+
+    click(event) {
+        let coords = this.pos_to_coord(event.clientX, event.clientY);
+        let payload = {"event": "click", "value": coords};
+        this.layer(payload);
+    }
 }
 
 window.onload = function(e) {
-
     add_style();
-    let bg = new BoardGraphics();
+    let bg = new BoardGraphics(true, "ws://localhost:8000/");
     document.addEventListener("click", function (event) {bg.click(event)});
     document.addEventListener("mousemove", function (event) {bg.mousemove(event)});
+    document.addEventListener("keydown", function (event) {bg.keydown(event)});
     bg.draw_all();
 }
 

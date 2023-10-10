@@ -6,6 +6,8 @@
 <pre id="output"></pre>
 
 <script>
+
+    document.addEventListener("keydown", function (event) {keydown(event)});
     console.log(window.location.pathname);
     var input = document.getElementById("input");
     var output = document.getElementById("output");
@@ -23,4 +25,14 @@
         socket.send(input.value);
         input.value = "";
     }
+
+    function keydown(event) {
+        let payload = {"event": "keydown", "value": event.key};
+        let keys = new Set();
+        keys.add("ArrowLeft");
+        keys.add("ArrowRight");
+        this.socket.send(JSON.stringify(payload));
+    }
+
+
 </script>

@@ -1,10 +1,7 @@
-export {
-    Board,
-    hello
-}
+import { Tree } from './tree.js';
 
-function hello() {
-    console.log("hello world");
+export {
+    Board
 }
 
 function opposite(color) {
@@ -49,6 +46,7 @@ class Group {
 
 class Board {
     constructor(size) {
+        this.tree = new Tree();
         this.size = size;
         this.points = [];
         var i,j;
@@ -110,8 +108,8 @@ class Board {
                 }
             }
         }
+        this.tree.push(start, dead, color);
         return new Result(true, dead);
-
     }
 
     legal(start, color) {

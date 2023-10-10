@@ -2,6 +2,13 @@ import { Board } from './board.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+function opposite(color) {
+    if (color == 1) {
+        return 2;
+    }
+    return 1;
+}
+
 function get_bgcolor() {
 }
 
@@ -516,16 +523,21 @@ class BoardGraphics {
         this.board.set(coord, 0);
         this.clear_canvas("current");
 
-        // switch color
+
+        // find current move
+        let cur = this.board.tree.current;
+
+        // draw current
+        if (cur.value != null) {
+            let v = cur.value;
+            let c = cur.color;
+            this.draw_current(v.x, v.y, c);
+        }
+
+        // get color
         let new_color = 2;
         if (color == 2) {
             new_color = 1;
-        }
-
-        // find current move
-        let cur = this.board.tree.current.value;
-        if (cur != null) {
-            this.draw_current(cur.x, cur.y, new_color);
         }
 
         // redraw captured stones

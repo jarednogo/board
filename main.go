@@ -72,8 +72,8 @@ func main() {
 		host := "0.0.0.0"
 		url := fmt.Sprintf("%s:%s", host, port)
 		fmt.Println("Listening on", url)
-		cert_file := fmt.Sprintf("%s/fullchain.pem")
-		key_file := fmt.Sprintf("%s/privkey.pem")
+		cert_file := fmt.Sprintf("%s/fullchain.pem", cert_dir)
+		key_file := fmt.Sprintf("%s/privkey.pem", cert_dir)
 		err := http.ListenAndServeTLS(url, cert_file, key_file, nil)
 		if err != nil {
 			panic("ListenAndServe: " + err.Error())

@@ -650,7 +650,7 @@ window.onload = function(e) {
     let debug = true;
     let port = "9000";
     var bg;
-    if debug {
+    if (debug) {
         bg = new BoardGraphics(shared, "ws://" + host + ":" + port + path);
     } else {
         bg = new BoardGraphics(shared, "wss://" + host + ":" + port + path);

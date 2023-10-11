@@ -644,10 +644,11 @@ class BoardGraphics {
 
 window.onload = function(e) {
     add_style();
+    let host = window.location.hostname;
     let path = window.location.pathname;
     let online = false;
     let port = "9000";
-    let bg = new BoardGraphics(online, "ws://localhost:" + port + path);
+    let bg = new BoardGraphics(online, "ws://" + host + ":" + port + path);
     document.addEventListener("click", function (event) {bg.click(event)});
     document.addEventListener("mousemove", function (event) {bg.mousemove(event)});
     document.addEventListener("keydown", function (event) {bg.keydown(event)});

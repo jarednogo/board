@@ -28,7 +28,6 @@ def board(path):
 
 @app.post("/new")
 def new_board():
-    print(request.form)
     board_id = request.form.get("board_id")
     board_id = sanitize(board_id)
 

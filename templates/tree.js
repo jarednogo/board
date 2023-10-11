@@ -22,7 +22,8 @@ class Tree {
     push(v, captured, color) {
         let n = new Node(v, captured, color, this.current);
         this.current.down.push(n);
-        this.current = this.current.down[0];
+        let index = this.current.down.length - 1;
+        this.current = this.current.down[index];
     }
 
     left() {
@@ -38,7 +39,8 @@ class Tree {
         if (this.current.down.length == 0) {
             return [null, []];
         }
-        this.current = this.current.down[0];
+        let index = this.current.down.length - 1;
+        this.current = this.current.down[index];
         return [this.current.value, this.current.captured, this.current.color];
     }
 }

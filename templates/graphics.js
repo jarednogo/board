@@ -523,7 +523,6 @@ class BoardGraphics {
         this.board.set(coord, 0);
         this.clear_canvas("current");
 
-
         // find current move
         let cur = this.board.tree.current;
 
@@ -544,6 +543,10 @@ class BoardGraphics {
         for (let c of captured) {
             this.draw_stone(c.x, c.y, new_color);
             this.board.set(c, new_color);
+        }
+
+        if (this.toggling) {
+            this.color = color;
         }
     }
     
@@ -568,6 +571,10 @@ class BoardGraphics {
             c_id = c.x.toString() + "-" + c.y.toString();
             this.clear_canvas(c_id);
             this.board.set(c, 0);
+        }
+
+        if (this.toggling) {
+            this.color = new_color;
         }
     }
 
@@ -637,7 +644,10 @@ class BoardGraphics {
 
 window.onload = function(e) {
     add_style();
-    let bg = new BoardGraphics(false, "ws://localhost:8000/");
+    let path = window.location.pathname;
+    let online = false;
+    let port = "9000";
+    let bg = new BoardGraphics(online, "ws://localhost:" + port + path);
     document.addEventListener("click", function (event) {bg.click(event)});
     document.addEventListener("mousemove", function (event) {bg.mousemove(event)});
     document.addEventListener("keydown", function (event) {bg.keydown(event)});

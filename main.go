@@ -53,9 +53,13 @@ func main() {
         s.Handler,
     }
 
+    host := "localhost"
+    port := "9000"
+    url := fmt.Sprintf("%s:%s", host, port)
+
 	http.Handle("/", ws)
-    fmt.Println("Listening on 8000")
-    err := http.ListenAndServe("localhost:8000", nil)
+    fmt.Println("Listening on", url)
+    err := http.ListenAndServe(url, nil)
 	if err != nil {
 		panic("ListenAndServe: " + err.Error())
 	}

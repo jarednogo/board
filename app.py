@@ -38,9 +38,10 @@ def new_board():
 
 local = os.getenv("BOARD_LOCAL")
 cert_dir = os.getenv("BOARD_CERT_DIR")
+port = os.getenv("BOARD_PORT")
 if local == "false":
     context = (f"{cert_dir}/fullchain.pem", f"{cert_dir}/privkey.pem")
-    app.run(host="0.0.0.0", port=8080, ssl_context=context)
+    app.run(host="0.0.0.0", port=port, ssl_context=context)
 else:
     app.run(port=8080)
 

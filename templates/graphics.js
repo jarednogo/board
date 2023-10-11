@@ -32,9 +32,9 @@ function new_fa(cls, handler) {
 }
 
 class BoardGraphics {
-    constructor(online, url) {
-        this.online = online;
-        if (online) {
+    constructor(shared, url) {
+        this.shared = shared;
+        if (shared) {
             this.socket = new WebSocket(url);
             this.socket.onmessage = function (orig) {
                 function inner(event) {
@@ -590,7 +590,7 @@ class BoardGraphics {
             return;
         }
 
-        if (this.online) {
+        if (this.shared) {
             console.log("sending:", payload);
             this.socket.send(JSON.stringify(payload));
             // do stuff;
@@ -646,9 +646,15 @@ window.onload = function(e) {
     add_style();
     let host = window.location.hostname;
     let path = window.location.pathname;
-    let online = false;
+    let shared = false;
+    let debug = true;
     let port = "9000";
-    let bg = new BoardGraphics(online, "ws://" + host + ":" + port + path);
+    var bg;
+    if debug {
+        bg = new BoardGraphics(shared, "ws://" + host + ":" + port + path);
+    } else {
+        bg = new BoardGraphics(shared, "wss://" + host + ":" + port + path);
+    }
     document.addEventListener("click", function (event) {bg.click(event)});
     document.addEventListener("mousemove", function (event) {bg.mousemove(event)});
     document.addEventListener("keydown", function (event) {bg.keydown(event)});

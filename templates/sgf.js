@@ -7,12 +7,7 @@ class Expr {
     }
 }
 
-class Branch {
-    constructor() {
-        this.nodes = [];
-        this.branches = [];
-    }
-}
+let x = 0;
 
 function iswhitespace(c) {
     return (c == "\n" || c == " " || c == "\t" || c == "\r");
@@ -75,6 +70,31 @@ class Parser {
         return new Expr("field", s);
     }
 
+    parse_nodes() {
+        let n = this.parse_node();
+        if (n.type == "error") {
+            return n;
+        }
+        let root = n.value;
+        let cur = root;
+        while (true) {
+            let c = this.peek(0);
+            if (c == ";") {
+                this.read();
+                let m = this.parse_node();
+                    if (m.type == "error") {
+                        return m;
+                    }
+                    let next = m.value;
+                    cur.down.push(next);
+                    cur = next;
+            } else {
+                break;
+            }
+        }
+        return new Expr("nodes", [root, cur]);
+    }
+
     parse_node() {
         var result;
         let fields = new Map();
@@ -89,7 +109,7 @@ class Parser {
                 break;
             }
             if (c < "A" || c > "Z") {
-                return new Expr("error", "bad node (expected key)");
+                return new Expr("error", "bad node (expected key)" + c);
             }
             result = this.parse_key();
             if (result.type == "error") {
@@ -156,28 +176,43 @@ class Parser {
     }
 
     parse_branch() {
-        let branch = new Branch();
+        let root = null;
+        let current = null;
         while (true) {
             let c = this.read();
             if (c == "\0") {
                 return new Expr("error", "unfinished branch, expected ')'");
             } else if (c == ";") {
-                let node = this.parse_node();
-                if (node.type == "error") {
-                    return node;
+                let result = this.parse_nodes();
+                if (result.type == "error") {
+                    return result;
                 }
-                branch.nodes.push(node);
+                let node = result.value[0];
+                let cur = result.value[1];
+                if (root == null) {
+                    root = node;
+                    current = cur;
+                } else {
+                    current.down.push(node);
+                    current = cur;
+                }
             } else if (c == "(") {
-                let new_branch = this.parse_branch();
-                if (new_branch.type == "error") {
-                    return new_branch;
+                let result = this.parse_branch();
+                if (result.type == "error") {
+                    return result;
                 }
-                branch.branches.push(new_branch);
+                let new_branch = result.value;
+                if (root == null) {
+                    root = new_branch;
+                    current = new_branch;
+                } else {
+                    current.down.push(new_branch);
+                }
             } else if (c == ")") {
                 break;
             }
         }
-        return new Expr("branch", branch);
+        return new Expr("branch", root);
     }
 
     read() {
@@ -209,8 +244,8 @@ class Parser {
 function test() {
     let data = `(;GM[1]FF[4]CA[UTF-8]AP[CGoban:3]ST[2]
 RU[Japanese]SZ[19]KM[6.50]
-PW[tony]PB[jared]
-;B[pd]
+PW[ tony ]PB[jared ]
+(;B[pd]
 (;W[qf]
 ;B[nc]
 (;W[qc]
@@ -219,15 +254,25 @@ PW[tony]PB[jared]
 ;B[qc]
 ;W[rc]TR[qd]
 ;B[qe]
+;
 ;W[rd]
 ;B[pe]))
 (;W[qc]
 ;B[qd]
-;W[pc]TR[qd][pd][qd]
-;B[od]LB[pc:D][qc:B][pd:A][qd:C]))`
+;W[pc]TR[qc][pd][qd]
+;B[od]LB[pc:D][qc:B][pd:A][qd:C])
+(;W[oc]
+;B[pc]
+;W[mc]))
+(;B[qg]))`
 
     let p = new Parser(data);
-    console.log(p.parse());
+    let result = p.parse();
+    if (result.type == "error") {
+        console.log(result);
+        return;
+    }
+    console.log(result.value);
 }
 
 test();

@@ -10,6 +10,9 @@ class Node {
         this.color = color;
         this.down = [];
         this.up = up;
+        this.labels = labels;
+        this.triangles = triangles;
+        this.fields = fields;
     }
 }
 

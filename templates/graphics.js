@@ -1,13 +1,8 @@
 import { Board } from './board.js';
 
-const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+import * from './common.js';
 
-function opposite(color) {
-    if (color == 1) {
-        return 2;
-    }
-    return 1;
-}
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 function get_bgcolor() {
 }

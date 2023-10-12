@@ -4,7 +4,7 @@ export {
 }
 
 class Node {
-    constructor(value, captured, color, up) {
+    constructor(value, captured, color, up, labels, triangles, fields) {
         this.value = value;
         this.captured = captured;
         this.color = color;

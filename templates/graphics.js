@@ -1,4 +1,5 @@
 import { Board } from './board.js';
+import * as config from './config.js';
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -643,14 +644,11 @@ window.onload = function(e) {
     add_style();
     let host = window.location.hostname;
     let path = window.location.pathname;
-    let shared = false;
-    let debug = true;
-    let port = "9000";
     var bg;
-    if (debug) {
-        bg = new BoardGraphics(shared, "ws://" + host + ":" + port + path);
+    if (config.debug) {
+        bg = new BoardGraphics(config.shared, "ws://" + host + ":" + config.port + path);
     } else {
-        bg = new BoardGraphics(shared, "wss://" + host + ":" + port + path);
+        bg = new BoardGraphics(config.shared, "wss://" + host + ":" + config.port + path);
     }
     document.addEventListener("click", function (event) {bg.click(event)});
     document.addEventListener("mousemove", function (event) {bg.mousemove(event)});

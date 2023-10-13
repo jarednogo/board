@@ -3,6 +3,7 @@ export {
     opposite,
     ObjectSet,
     Result,
+    letters2coord,
 }
 
 class Coord {
@@ -17,6 +18,17 @@ function opposite(color) {
         return 2;
     }
     return 1;
+}
+
+function letters2coord(s) {
+    if (s.length != 2) {
+        return null;
+    }
+    let a = s[0].toLowerCase();
+    let b = s[1].toLowerCase();
+    let x = a.charCodeAt(0) - 97;
+    let y = b.charCodeAt(0) - 97;
+    return new Coord(x,y);
 }
 
 class ObjectSet extends Set{

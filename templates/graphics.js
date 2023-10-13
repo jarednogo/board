@@ -1,7 +1,5 @@
 import { Board } from './board.js';
 
-import * from './common.js';
-
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 function get_bgcolor() {
@@ -586,7 +584,7 @@ class BoardGraphics {
         }
 
         if (this.shared) {
-            console.log("sending:", payload);
+            //console.log("sending:", payload);
             this.socket.send(JSON.stringify(payload));
             // do stuff;
             return;
@@ -609,7 +607,7 @@ class BoardGraphics {
     }
 
     onmessage(event) {
-        console.log("receiving:", event.data);
+        //console.log("receiving:", event.data);
         let payload = JSON.parse(event.data);
         this.layer2(payload);
     }

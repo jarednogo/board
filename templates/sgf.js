@@ -1,4 +1,5 @@
 import { Node } from './tree.js';
+import { letters2coord } from './common.js';
 
 class Expr {
     constructor(type, value) {
@@ -171,7 +172,8 @@ class Parser {
                     fields.set(key, multifield);
             }
         }
-        let n = new Node(move, [], color, null, labels, triangles, fields);
+        let v = letters2coord(move);
+        let n = new Node(v, [], color, null, labels, triangles, fields);
         return new Expr("node", n);
     }
 

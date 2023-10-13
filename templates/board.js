@@ -1,5 +1,5 @@
 import { Tree } from './tree.js';
-import * from './common.js';
+import { opposite, Coord, ObjectSet, Result } from './common.js';
 
 export {
     Board

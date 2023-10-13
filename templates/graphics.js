@@ -348,13 +348,13 @@ class BoardGraphics {
     }
 
 
-    draw_mark(x, y) {
+    draw_mark(x, y, mark) {
         let hexcolor = "#000000";
         if (this.board.points[x][y] == 1) {
             hexcolor = "#FFFFFF";
         }
 
-        if (this.mark == "triangle") {
+        if (mark == "triangle") {
             let id = "triangle-" + x.toString() + "-" + y.toString();
             if (this.canvases.has(id)) {
                 this.canvases.get(id).remove();
@@ -363,7 +363,7 @@ class BoardGraphics {
             }
             this.new_canvas(id, 1000);
             this.draw_triangle(x, y, hexcolor, id);
-        } else if (this.mark == "letter") {
+        } else if (mark == "letter") {
             let id = "letter-" + x.toString() + "-" + y.toString();
             if (this.canvases.has(id)) {
                 this.canvases.get(id).remove();
@@ -478,21 +478,22 @@ class BoardGraphics {
     download() {
     }
 
-    place(x, y, color) {
+    place(x, y, color, mark) {
         // if out of bounds, just return
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return;
         }
 
-        if (this.mark != "") {
-            this.draw_mark(x, y);
+        if (mark != "") {
+            this.draw_mark(x, y, mark);
             return;
         }
 
-        let result = this.board.place(x, y, this.color);
+        let result = this.board.place(x, y, color);
         if (!result.ok) {
             return;
         }
+
         for (let v of result.values) {
             // again, this could be more idiomatic
             let id = v.x.toString() + "-" + v.y.toString();
@@ -607,7 +608,7 @@ class BoardGraphics {
             }
         } else if (evt == "click") {
             let coords = payload["value"];
-            this.place(coords[0], coords[1], this.color);
+            this.place(coords[0], coords[1], payload["color"], payload["mark"]);
         }
     }
 
@@ -635,7 +636,7 @@ class BoardGraphics {
 
     click(event) {
         let coords = this.pos_to_coord(event.clientX, event.clientY);
-        let payload = {"event": "click", "value": coords};
+        let payload = {"event": "click", "value": coords, "color": this.color, "mark": this.mark};
         this.layer(payload);
     }
 }

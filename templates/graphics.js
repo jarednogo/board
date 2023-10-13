@@ -115,6 +115,10 @@ class BoardGraphics {
 }
 
     new_canvas(id, z_index) {
+        // derp
+        if (this.canvases.has(id)) {
+            return;
+        }
         let review = document.getElementById("review");
         let canvas = document.createElement("canvas");
         canvas.setAttribute("id", id);

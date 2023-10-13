@@ -60,7 +60,7 @@ func main() {
 
 	port := "9000"
 
-	if local == "true" {
+	if local == "true" || local == "" {
 		host := "localhost"
 		url := fmt.Sprintf("%s:%s", host, port)
 		fmt.Println("Listening on", url)

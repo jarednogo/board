@@ -98,8 +98,8 @@ class BoardGraphics {
         column.appendChild(new_fa("fa-solid fa-download", function(orig) {function inner() {orig.download()}; return inner;}(this)));
 
         row.appendChild(new_fa("fa-solid fa-backward-fast"));
-        row.appendChild(new_fa("fa-solid fa-caret-left", function(orig) {function inner() {orig.left()}; return inner;}(this)));
-        row.appendChild(new_fa("fa-solid fa-caret-right", function(orig) {function inner() {orig.right()}; return inner;}(this)));
+        row.appendChild(new_fa("fa-solid fa-caret-left", function(orig) {function inner() {orig.prepare_left()}; return inner;}(this)));
+        row.appendChild(new_fa("fa-solid fa-caret-right", function(orig) {function inner() {orig.prepare_right()}; return inner;}(this)));
         row.appendChild(new_fa("fa-solid fa-forward-fast"));
 
         let style = "position: absolute; ";
@@ -507,6 +507,16 @@ class BoardGraphics {
         }
     }
 
+    prepare_left() {
+        let payload = {"event":"keydown","value":"ArrowLeft"};
+        this.prepare(payload);
+    }
+
+    prepare_right() {
+        let payload = {"event":"keydown","value":"ArrowRight"};
+        this.prepare(payload);
+    }
+
     left() {
         let result = this.board.tree.left();
         let coord = result[0];
@@ -577,8 +587,10 @@ class BoardGraphics {
         }
     }
 
-    layer(payload) {
+    prepare(payload) {
         let evt = payload["event"];
+
+        // mousemovements don't get shared
         if (evt == "mousemove") {
             let coords = payload["value"];
             if (this.mark != "") {
@@ -595,10 +607,12 @@ class BoardGraphics {
             // do stuff;
             return;
         }
-        this.layer2(payload);
+        // only gets called if not shared
+        // because server repeats messages to everyone
+        this.fromserver(payload);
     }
 
-    layer2(payload) {
+    fromserver(payload) {
         let evt = payload["event"];
         if (evt == "keydown") {
             if (payload["value"] == "ArrowLeft") {
@@ -615,7 +629,7 @@ class BoardGraphics {
     onmessage(event) {
         //console.log("receiving:", event.data);
         let payload = JSON.parse(event.data);
-        this.layer2(payload);
+        this.fromserver(payload);
     }
 
     keydown(event) {
@@ -624,20 +638,20 @@ class BoardGraphics {
         keys.add("ArrowLeft");
         keys.add("ArrowRight");
         if (keys.has(event.key)) {
-            this.layer(payload);
+            this.prepare(payload);
         }
     }
 
     mousemove(event) {
         let coords = this.pos_to_coord(event.clientX, event.clientY);
         let payload = {"event": "mousemove", "value": coords};
-        this.layer(payload);
+        this.prepare(payload);
     }
 
     click(event) {
         let coords = this.pos_to_coord(event.clientX, event.clientY);
         let payload = {"event": "click", "value": coords, "color": this.color, "mark": this.mark};
-        this.layer(payload);
+        this.prepare(payload);
     }
 }
 

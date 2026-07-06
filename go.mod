@@ -3,7 +3,7 @@ module github.com/golab/board
 go 1.24.0
 
 require (
-	github.com/go-chi/chi/v5 v5.2.2
+	github.com/go-chi/chi/v5 v5.2.4
 	github.com/google/uuid v1.6.0
 	golang.org/x/crypto v0.45.0
 	golang.org/x/net v0.47.0
@@ -12,7 +12,7 @@ require (
 
 require gopkg.in/yaml.v3 v3.0.1
 
-require github.com/lib/pq v1.10.9 // indirect
+require github.com/lib/pq v1.10.9
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
